@@ -58,7 +58,7 @@ export const authService = {
             
             // Validate input
             if (!email || !password) {
-                // this.logout();
+                 this.logout();
                 throw new Error('Email and password are required');
                 
             }
