@@ -166,7 +166,7 @@ export default function InterventionList() {
               className="w-20 h-20 rounded-full border-4 border-white shadow-md mx-auto"
             />
             <h2 className="text-xl font-semibold mt-2 text-[#333] text-center">
-              {userData ? `${userData.name}` : 'Loading...'}
+              {userData ? `${userData.first_name}` : 'Loading...'}
             </h2>
             <p className="text-gray-500 text-center">Prestataire</p>
           </div>

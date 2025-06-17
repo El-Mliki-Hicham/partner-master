@@ -107,7 +107,7 @@ export default function Header({loading, userData, uploadedDocsCount, activeLink
                 alt="Profile"
                 className="w-20 h-20 rounded-full border-4 border-white shadow-md mx-auto"
               />
-              <h2 className="text-xl font-semibold mt-2 text-[#333] text-center">{userData?.name || 'Loading...'}</h2>
+              <h2 className="text-xl font-semibold mt-2 text-[#333] text-center">{userData?.first_name  || 'Loading...'}</h2>
               <p className="text-gray-500 text-center">{userData?.role || 'Loading...'}</p>
             </>
           )}

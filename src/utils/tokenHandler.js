@@ -19,7 +19,6 @@ export async function getDecryptedTokenFromUrl() {
      
         
         if (!encryptedToken) {
-            console.log("decrepssdddddddddddddddddddddddddddddddddddddddddddddd");
             return null;
         }
         
