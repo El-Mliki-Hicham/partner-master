@@ -23,7 +23,9 @@ if (typeof window !== 'undefined') {
 async function initializeAuth() {
     try {
         const token = await getDecryptedTokenFromUrl();
+        console.log("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeettttttttttttttttttttttttttttttttttt");
         console.log(token);
+        console.log("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeettttttttttttttttttttttttttttttttttt");
         
         if (token) {
             localStorage.setItem(AUTH_TOKEN_KEY, token);
@@ -58,7 +60,7 @@ export const authService = {
             
             // Validate input
             if (!email || !password) {
-                 this.logout();
+                //  this.logout();
                 throw new Error('Email and password are required');
                 
             }
