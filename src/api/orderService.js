@@ -23,6 +23,34 @@ export const orderService = {
         }
     },
 
+    // Get orders for a specific user
+    getOrderByUserId: async (user_type, user_id) => {
+        try {
+            const response = await apiClient.get(`${API_ROUTES.ORDERS}/getOrderByUserId`, {
+                params: {
+                    user_type,
+                    user_id
+                }
+            });
+    
+            const orderData = Array.isArray(response?.data)
+                ? response.data
+                : (Array.isArray(response?.data?.data) ? response.data.data : []);
+    
+            return {
+                data: orderData,
+                status: 'success'
+            };
+        } catch (error) {
+            console.error('Error fetching user orders:', error);
+            return {
+                data: [],
+                status: 'error',
+                message: error.response?.data?.message || 'Une erreur est survenue'
+            };
+        }
+    },
+
     // Get a specific order
     getOrder: async (orderId) => {
         try {

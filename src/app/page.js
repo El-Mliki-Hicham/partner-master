@@ -29,11 +29,14 @@ export default function InterventionList() {
         const userResult = await userService.getCurrentUser();
         if (userResult.status === 'success') {
           setUserData(userResult.data);
+          console.log('user : ',userResult.data.role);
+          
         }
 
         // Fetch interventions
-        const result = await orderService.getOrders();
+        const result = await orderService.getOrderByUserId(userResult.data.role, userResult.data.id);
         if (result.status === 'success') {
+          
           setInterventions(result.data);
         } else {
           throw new Error(result.message || 'Failed to fetch interventions');
