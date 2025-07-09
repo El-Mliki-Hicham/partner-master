@@ -66,5 +66,37 @@ export const userService = {
                 message: error.response?.data?.message || 'Une erreur est survenue'
             };
         }
+    },
+    uploadDocument: async (prestataireId, formData) => {
+        try {
+            const response = await apiClient.post(
+                `/prestataires/${prestataireId}/documents`,
+                formData
+            );
+            return response.data;
+        } catch (error) {
+            console.error('Error uploading document:', error);
+            throw error;
+        }
     }
+,
+    // Get user documents
+    getDocuments: async (prestataireId) => {
+        try {
+            const response = await apiClient.get(`/prestataires/${prestataireId}/documents`);
+            return {
+                data: response?.data || [],
+                status: 'success'
+            };
+        } catch (error) {
+            console.error('Error fetching documents:', error);
+            return {
+                data: [],
+                status: 'error',
+                message: error.response?.data?.message || 'Une erreur est survenue'
+            };
+        }
+    },
+
+    
 };

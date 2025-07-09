@@ -5,15 +5,14 @@ import { Search, Eye } from "lucide-react";
 import DocUploadCard from '../components/DocUploadCard';
 import Header from '../components/Header';
 import { userService } from '@/api/userService';
-
-const REQUIRED_DOCUMENTS = [
-  "Piece d'identite",
-  "Assurance",
-  "Kibis ou registre de commerce",
-  "URSSAF",
-  "Rib",
-  "Diplome et certification"
-];
+const REQUIRED_DOCUMENTS = {
+  identity_card: "Piece d'identite",
+  insurance: "Assurance",
+  business_registration: "Kibis ou registre de commerce", 
+  social_security: "URSSAF",
+  bank_details: "Rib",
+  diplomas: "Diplome et certification"
+};
 
 export default function DocumentsList() {
   const [search, setSearch] = useState("");
@@ -92,16 +91,19 @@ export default function DocumentsList() {
 
         {/* Document Upload Cards */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {REQUIRED_DOCUMENTS.filter(doc => 
-            doc.toLowerCase().includes(search.toLowerCase())
-          ).map((docTitle) => (
-            <DocUploadCard
-              key={docTitle}
-              title={docTitle}
-              agentId={userData?.id}
-              onUpload={(details) => handleDocumentUpload(details, docTitle)}
-            />
-          ))}
+          {Object.entries(REQUIRED_DOCUMENTS)
+            .filter(([key, value]) => 
+              value.toLowerCase().includes(search.toLowerCase())
+            )
+            .map(([key, value]) => (
+              <DocUploadCard
+                key={key}
+                type={key}
+                title={value}
+                agentId={userData?.id}
+                onUpload={(details) => handleDocumentUpload(details, key)}
+              />
+            ))}
         </div>
       </div>
     </div>

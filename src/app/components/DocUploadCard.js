@@ -1,16 +1,47 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { File, CheckCircle, Upload, X } from 'lucide-react';
+import { userService } from '@/api/userService';
 
-export default function DocUploadCard({ title, agentId, onUpload }) {
+export default function DocUploadCard({type, title, agentId, onUpload }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
   const [showUploadUI, setShowUploadUI] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [documents, setDocuments] = useState([]);
 
-  // Load the upload status when component mounts
+  // Load the upload status and documents when component mounts
   useEffect(() => {
+    const fetchUserAndDocuments = async () => {
+      try {
+        const response = await userService.getCurrentUser();
+        setCurrentUser(response.data);
+        
+        // Fetch documents after getting user
+        if (response.data?.id) {
+          const documentsResponse = await userService.getDocuments(response.data.id);
+          const documentData = documentsResponse.data.data;
+          
+          // Transform document data into array format for rendering
+          const documentArray = Object.entries(documentData).map(([type, details]) => ({
+            type,
+            name: details.file_path ? details.file_path.split('/').pop() : null,
+            uploaded: details.uploaded,
+            isVerified: details.is_verified,
+            path: details.file_path
+          })).filter(doc => doc.uploaded);
+          
+          setDocuments(documentArray);
+        }
+      } catch (error) {
+        console.error('Error fetching user or documents:', error);
+      }
+    };
+
+    fetchUserAndDocuments();
+
     if (agentId) {
       const storageKey = `${agentId}-${title}`;
       const savedUpload = localStorage.getItem(storageKey);
@@ -24,12 +55,12 @@ export default function DocUploadCard({ title, agentId, onUpload }) {
 
   const getDocumentType = () => {
     const typeMap = {
-      "Piece d'identite": "identity",
-      "Assurance": "insurance",
-      "Kibis ou registre de commerce": "kibis",
-      "URSSAF": "urssaf",
-      "Rib": "rib",
-      "Diplome et certification": "diploma"
+      "Piece d'identite": "identity_card",
+      "Assurance": "insurance", 
+      "Kibis ou registre de commerce": "business_registration",
+      "URSSAF": "social_security",
+      "Rib": "bank_details",
+      "Diplome et certification": "diplomas"
     };
     return typeMap[title] || 'other';
   };
@@ -42,34 +73,36 @@ export default function DocUploadCard({ title, agentId, onUpload }) {
     setUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('agentId', agentId);
-      formData.append('docType', getDocumentType());
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        return;
       }
 
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('agentId', agentId);
+      formData.append('document_type', getDocumentType());
+      
+      const response = await userService.uploadDocument(currentUser.id, formData);
       const data = await response.json();
       
-      // Save upload data to localStorage
-      const uploadData = {
-        fileName: file.name,
-        filePath: data.path,
-        documentType: getDocumentType(),
-        agentId: agentId,
-        uploadedAt: new Date().toISOString()
-      };
-      
-      const storageKey = `${agentId}-${title}`;
-      localStorage.setItem(storageKey, JSON.stringify(uploadData));
-      
+      // Get updated document list after successful upload
+      const documentsResponse = await userService.getDocuments(response.data.id);
+      if (documentsResponse.data?.id) {
+        const documentData = documentsResponse.data.data;
+        
+        // Transform document data into array format for rendering
+        const documentArray = Object.entries(documentData).map(([type, details]) => ({
+          type,
+          name: details.file_path ? details.file_path.split('/').pop() : null,
+          uploaded: details.uploaded,
+          isVerified: details.is_verified,
+          path: details.file_path
+        })).filter(doc => doc.uploaded);
+        
+        setDocuments(documentArray);
+      }
       setUploadedFile(uploadData);
       setUploadComplete(true);
       setShowUploadUI(false);
@@ -77,7 +110,7 @@ export default function DocUploadCard({ title, agentId, onUpload }) {
       onUpload(uploadData);
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Failed to upload document. Please try again.');
+   
     } finally {
       setUploading(false);
     }
@@ -95,6 +128,38 @@ export default function DocUploadCard({ title, agentId, onUpload }) {
     e.preventDefault();
   };
 
+  // Display documents list
+  const renderDocumentsList = () => {
+    if (documents.length === 0) return null;
+
+    return (
+      <div className="mt-4 bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow duration-200">
+        <h4 className="text-sm font-medium text-gray-700 mb-3">Uploaded Documents:</h4>
+        <ul className="space-y-3">
+          {documents
+            .filter(doc => doc.type === getDocumentType())
+            .map((doc, index) => (
+              <li 
+                key={index} 
+                className="text-sm text-gray-600 flex items-center p-3 bg-gray-50 rounded-md hover:bg-gray-100 cursor-pointer transition-colors duration-200"
+                // onClick={() =>
+                //   // window.open(
+                //   //   `https://servicepro-api.canbridgeapp.com/storage/${doc.path}`,
+                //   //   '_blank'
+                //   // )
+                // }
+              >
+                <File className="w-5 h-5 mr-3 text-sky-600" />
+                <div className="flex flex-col">
+                  <span className="font-medium">{doc.name || 'Unknown'}</span>
+                  <span className="text-xs text-gray-400">Click to view</span>
+                </div>
+              </li>
+          ))}
+        </ul>
+      </div>
+    );
+  };
   if (!showUploadUI && !uploadComplete) {
     return (
       <div className="flex flex-col space-y-4">
@@ -111,6 +176,7 @@ export default function DocUploadCard({ title, agentId, onUpload }) {
             <span className="bg-gray-200 text-gray-700 rounded-full px-2 py-1 text-xs">PNG</span>
           </div>
         </button>
+        {renderDocumentsList()}
       </div>
     );
   }
@@ -127,6 +193,7 @@ export default function DocUploadCard({ title, agentId, onUpload }) {
             <span className="text-gray-700 text-xs">Upload complete</span>
           </div>
         </div>
+        {renderDocumentsList()}
       </div>
     );
   }
@@ -176,6 +243,7 @@ export default function DocUploadCard({ title, agentId, onUpload }) {
           )}
         </label>
       </div>
+      {renderDocumentsList()}
     </div>
   );
 }
