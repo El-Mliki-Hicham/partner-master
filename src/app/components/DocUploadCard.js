@@ -85,11 +85,10 @@ export default function DocUploadCard({type, title, agentId, onUpload }) {
       formData.append('document_type', getDocumentType());
       
       const response = await userService.uploadDocument(currentUser.id, formData);
-      const data = await response.json();
       
       // Get updated document list after successful upload
-      const documentsResponse = await userService.getDocuments(response.data.id);
-      if (documentsResponse.data?.id) {
+      const documentsResponse = await userService.getDocuments(currentUser.id);
+      if (documentsResponse.data?.data) {
         const documentData = documentsResponse.data.data;
         
         // Transform document data into array format for rendering
@@ -103,14 +102,22 @@ export default function DocUploadCard({type, title, agentId, onUpload }) {
         
         setDocuments(documentArray);
       }
+
+      const uploadData = {
+        fileName: file.name,
+        filePath: response.data.file_path
+      };
+
       setUploadedFile(uploadData);
       setUploadComplete(true);
       setShowUploadUI(false);
 
-      onUpload(uploadData);
+      if (onUpload) {
+        onUpload(uploadData);
+      }
+
     } catch (error) {
       console.error('Upload failed:', error);
-   
     } finally {
       setUploading(false);
     }
@@ -128,72 +135,23 @@ export default function DocUploadCard({type, title, agentId, onUpload }) {
     e.preventDefault();
   };
 
-  // Display documents list
-  const renderDocumentsList = () => {
-    if (documents.length === 0) return null;
-
-    return (
-      <div className="mt-4 bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow duration-200">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Uploaded Documents:</h4>
-        <ul className="space-y-3">
-          {documents
-            .filter(doc => doc.type === getDocumentType())
-            .map((doc, index) => (
-              <li 
-                key={index} 
-                className="text-sm text-gray-600 flex items-center p-3 bg-gray-50 rounded-md hover:bg-gray-100 cursor-pointer transition-colors duration-200"
-                // onClick={() =>
-                //   // window.open(
-                //   //   `https://servicepro-api.canbridgeapp.com/storage/${doc.path}`,
-                //   //   '_blank'
-                //   // )
-                // }
-              >
-                <File className="w-5 h-5 mr-3 text-sky-600" />
-                <div className="flex flex-col">
-                  <span className="font-medium">{doc.name || 'Unknown'}</span>
-                  <span className="text-xs text-gray-400">Click to view</span>
-                </div>
-              </li>
-          ))}
-        </ul>
-      </div>
-    );
-  };
-  if (!showUploadUI && !uploadComplete) {
-    return (
-      <div className="flex flex-col space-y-4">
-        <h3 className="text-lg font-semibold text-[#207DAB] mb-4 text-center">{title}</h3>
-        <button 
-          onClick={() => setShowUploadUI(true)}
-          className="bg-white text-black h-48 w-full rounded-lg shadow-lg flex flex-col items-center justify-center hover:bg-gray-50 transition-colors duration-200"
-        >
-          <File className="w-8 h-8 text-sky-700 mb-2" />
-          <span className="text-sm text-gray-500">Cliquer pour télécharger</span>
-          <div className="flex space-x-2 mt-2">
-            <span className="bg-gray-200 text-gray-700 rounded-full px-2 py-1 text-xs">PDF</span>
-            <span className="bg-gray-200 text-gray-700 rounded-full px-2 py-1 text-xs">JPG</span>
-            <span className="bg-gray-200 text-gray-700 rounded-full px-2 py-1 text-xs">PNG</span>
-          </div>
-        </button>
-        {renderDocumentsList()}
-      </div>
-    );
-  }
-
   if (uploadComplete) {
     return (
       <div className="flex flex-col space-y-4">
         <h3 className="text-lg font-semibold text-[#207DAB] mb-4 text-center">{title}</h3>
-        <div className="bg-white text-black h-48 w-full rounded-lg shadow-lg flex flex-col items-center justify-center">
+      
+        <div 
+          className="bg-white text-black h-48 w-full rounded-lg shadow-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50"
+          onClick={() => uploadedFile?.filePath && window.open(uploadedFile.filePath, '_blank')}
+        >
           <File className="w-8 h-8 text-sky-700 mb-2" />
           <span className="text-sm text-gray-500">{uploadedFile?.fileName || selectedFile?.name}</span>
           <div className="flex items-center space-x-2 mt-2">
             <CheckCircle className="w-4 h-4 text-green-500" />
             <span className="text-gray-700 text-xs">Upload complete</span>
           </div>
+          <span className="text-xs text-sky-700 mt-2">Click to view document</span>
         </div>
-        {renderDocumentsList()}
       </div>
     );
   }
@@ -243,7 +201,6 @@ export default function DocUploadCard({type, title, agentId, onUpload }) {
           )}
         </label>
       </div>
-      {renderDocumentsList()}
     </div>
   );
 }
