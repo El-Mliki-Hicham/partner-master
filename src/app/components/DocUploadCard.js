@@ -54,19 +54,17 @@ export default function DocUploadCard({ title, agentId, onUpload }) {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('document', file);
       formData.append('agentId', agentId);
-      formData.append('docType', getDocumentType());
+      formData.append('document_type', getDocumentType());
 
-      const response = await fetch(`/prestataires/${getUser.id}/documents`, {
-        method: 'POST',
-        body: formData
-      });
+      const response = await userService.uploadDocument(getUser.id, formData);
 
-      if (!response.ok) {
+      if (response.status !== 'success') {
         throw new Error('Upload failed');
       }
 
-      const data = await response.json();
+      const data = response.data;
       
       // Save upload data to localStorage
       const uploadData = {

@@ -67,19 +67,25 @@ export const userService = {
             };
         }
     },
-    uploadDocument: async (prestataireId, formData) => {
+    // ... existing code ...
+
+    // Upload document for a user
+    uploadDocument: async (userId, formData) => {
         try {
-            const response = await apiClient.post(
-                `/prestataires/${prestataireId}/documents`,
-                formData
-            );
-            return response.data;
+            const response = await apiClient.post(`${API_ROUTES.PRESTATAIRES}/${userId}/documents`, formData);
+            return {
+                data: response.data,
+                status: 'success'
+            };
         } catch (error) {
             console.error('Error uploading document:', error);
-            throw error;
+            return {
+                data: null,
+                status: 'error',
+                message: error.response?.data?.message || 'Une erreur est survenue'
+            };
         }
-    }
-,
+    },
     // Get user documents
     getDocuments: async (prestataireId) => {
         try {
