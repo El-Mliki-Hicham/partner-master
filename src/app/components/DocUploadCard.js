@@ -20,6 +20,7 @@ export default function DocUploadCard({ title, agentId, onUpload }) {
           console.log('user : ',userResult.data.role);
         }
     }
+    fetchUser()
     if (agentId) {
       const storageKey = `${agentId}-${title}`;
       const savedUpload = localStorage.getItem(storageKey);
