@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { File, CheckCircle, Upload, X } from 'lucide-react';
+import { userService } from '@/api/userService';
 
 export default function DocUploadCard({ title, agentId, onUpload }) {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -8,9 +9,17 @@ export default function DocUploadCard({ title, agentId, onUpload }) {
   const [uploadComplete, setUploadComplete] = useState(false);
   const [showUploadUI, setShowUploadUI] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [getUser, setUserData] = useState(null);
 
   // Load the upload status when component mounts
   useEffect(() => {
+    const fetchUser = async ()=>{
+       const userResult = await userService.getCurrentUser();
+        if (userResult.status === 'success') {
+          setUserData(userResult.data);
+          console.log('user : ',userResult.data.role);
+        }
+    }
     if (agentId) {
       const storageKey = `${agentId}-${title}`;
       const savedUpload = localStorage.getItem(storageKey);
@@ -47,7 +56,7 @@ export default function DocUploadCard({ title, agentId, onUpload }) {
       formData.append('agentId', agentId);
       formData.append('docType', getDocumentType());
 
-      const response = await fetch('/api/upload', {
+      const response = await fetch(`/prestataires/${getUser.id}/documents`, {
         method: 'POST',
         body: formData
       });
